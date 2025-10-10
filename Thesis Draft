@@ -44,10 +44,10 @@ The project will be conducted through the following steps:
 7. Deliverables
 
 * Working Prototype:
-    If research and implementation confirm feasibility, the final deliverable will be a functional Python-based prototype capable of automatically generating BeamNG scenarios from OSM      data, including road networks and vehicle routes with GPS tracking.
+    If research and implementation confirm feasibility, the final deliverable will be a functional Python-based prototype capable of automatically generating BeamNG scenarios from      OSM data, including road networks and vehicle routes with GPS tracking.
 
 * Feasibility Report and Research Review:
-    If the research indicates limitations or infeasibility, the deliverable will be a comprehensive analysis compiling previous academic and industry studies that attempted similar         integrations (OSM → simulation) and identifying the core reasons they were unsuccessful.
+    If the research indicates limitations or infeasibility, the deliverable will be a comprehensive analysis compiling previous academic and industry studies that attempted similar     integrations (OSM → simulation) and identifying the core reasons they were unsuccessful.
 
 * Documentation:
     Full technical documentation covering system design, data flow, algorithms used, and evaluation methodology.

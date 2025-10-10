@@ -1,0 +1,56 @@
+Thesis Draft: Automated Generation of Driving Simulation Scenarios from OpenStreetMap Data
+
+1. Problem Statement
+
+Creating realistic driving simulation scenarios is often a labor-intensive process that requires manual road modeling, object placement, and route definition. This limits the scalability and efficiency of simulation-based testing for autonomous vehicles and driver-assistance systems. There is currently no fully automated, open-source framework that can generate simulation-ready environments directly from public mapping sources like OpenStreetMap (OSM), while providing accurate GPS-level positional data for moving vehicles.
+
+2. Topic Brief
+
+This thesis explores the feasibility and development of an automated system capable of generating driving simulation scenarios directly from OSM or similar mapping data. The system aims to extract real-world map structures, transform them into simulation-compatible formats, and simulate vehicle movement with realistic GPS data within BeamNG interface. Python will serve as the core development language for automation, data handling, and scenario generation.
+
+3. Research Direction and Methodology
+
+The project will be conducted through the following steps:
+
+1. Map Data Extraction: Use Python-based OSM tools (e.g., `osmnx`, `overpy`) to extract road networks, intersections, and metadata from selected regions.
+2. Data Transformation: Convert extracted data into a format compatible with BeamNG scenario structures (.json/.prefab).
+3. Scenario Generation: Automate the creation of scenarios including road layouts, spawn points, and AI vehicle routes.
+4. Vehicle Simulation and GPS Emulation: Run simulations in BeamNG using its Python API to record positional data and emulate GPS readings.
+5. Accuracy Evaluation: Compare simulated GPS coordinates against reference OSM data to assess accuracy, realism, and performance.
+6. Feasibility Analysis: Review the entire process to evaluate technical viability, data precision, and potential challenges.
+
+4. Objectives
+
+  * Develop an automated workflow from OSM data to BeamNG driving simulation scenarios.
+  * Implement vehicle trajectory generation with GPS data collection.
+  * Evaluate accuracy of positional and mapping data within simulations.
+  * Assess feasibility, limitations, and improvement potential for automated scenario generation.
+
+5. Tools and Technologies
+
+  * Simulation Platform: BeamNG.drive
+  * Programming Environment: Python
+  * Map Data Source: OpenStreetMap (via OSMnx, Overpy, or Overpass API)
+  * Data Analysis Tools: Pandas, Matplotlib, NumPy, Plotly
+  * Coordinate Systems: WGS84 (OSM data), UTM for GPS accuracy validation
+
+6. Expected Results
+
+  * A validated workflow demonstrating how real-world OSM data can be used to generate simulation environments.
+  * GPS-based vehicle movement within BeamNG that aligns with real map geometry.
+  * Quantitative analysis of positional accuracy and transformation fidelity.
+  * A documented feasibility conclusion indicating whether fully automated OSM-to-simulation conversion is practically achievable.
+
+7. Deliverables
+
+* Working Prototype:
+    If research and implementation confirm feasibility, the final deliverable will be a functional Python-based prototype capable of automatically generating BeamNG scenarios from OSM      data, including road networks and vehicle routes with GPS tracking.
+
+* Feasibility Report and Research Review:
+    If the research indicates limitations or infeasibility, the deliverable will be a comprehensive analysis compiling previous academic and industry studies that attempted similar         integrations (OSM → simulation) and identifying the core reasons they were unsuccessful.
+
+* Documentation:
+    Full technical documentation covering system design, data flow, algorithms used, and evaluation methodology.
+
+* Evaluation Dataset:
+    Collection of test cases (e.g., different regions, terrain types) and corresponding accuracy metrics for GPS and simulation output.

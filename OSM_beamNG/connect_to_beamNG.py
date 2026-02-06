@@ -2,6 +2,8 @@ import osmnx as ox
 import networkx as nx
 from shapely.geometry import LineString
 from beamngpy import BeamNGpy, Scenario, Vehicle, Road
+from beamngpy.sensors import AdvancedIMU
+
 
 
 def main():
@@ -11,6 +13,8 @@ def main():
 
     G = ox.graph_from_point(center, dist=1000, network_type="drive", simplify=True)
     G = ox.project_graph(G)  # x/y now in meters
+
+    print(G)
 
     # ---- Choose a local origin so coordinates are near (0,0) ----
     xs = [float(G.nodes[n]["x"]) for n in G.nodes]
@@ -54,6 +58,7 @@ def main():
     vehicle = Vehicle("ego", model="etk800", licence="HNU")
     scenario.add_vehicle(vehicle, pos=(0, 0, 0.2), rot_quat=(0, 0, 0, 1))
 
+
     # ---- BeamNG connection ----
     bng = BeamNGpy(
         "localhost",
@@ -66,7 +71,7 @@ def main():
     scenario.make(bng)
     bng.scenario.load(scenario)
     bng.scenario.start()
-
+    imu = AdvancedIMU("accel1", bng, vehicle, gfx_update_time=0.01)
     # ---- Simple AI route (shortest path between two nodes) ----
     nodes = list(G.nodes)
     if len(nodes) >= 2:
@@ -76,16 +81,18 @@ def main():
         route = [(float(x), float(y), float(z)) for (x, y, z) in route]
 
         vehicle.ai.set_mode("span")
-        vehicle.ai.set_route(route)
+        # ---- vehicle.ai.set_route(route) ----
 
     print("Scenario running. Close BeamNG or Ctrl+C to stop.")
     try:
         while True:
             bng.step(60)
+            data = imu.poll()
+            if data and "pos" in data[0]:
+                x, y, z = data[0]["pos"]
+                print(f"pos: x={x:.3f}, y={y:.3f}, z={z:.3f}")
     except KeyboardInterrupt:
         pass
-
-
 
 if __name__ == "__main__":
     main()

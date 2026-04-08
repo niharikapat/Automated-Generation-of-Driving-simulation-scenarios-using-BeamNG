@@ -28,7 +28,8 @@
 	<li>beamngpy</li>
 </ul>
 
-<h2>Install dependencies</h2>
+<ol>
+	<li><h2>Install dependencies</h2></li>
 
 ```bash
 pip install -r requirements.txt

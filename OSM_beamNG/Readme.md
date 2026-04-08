@@ -31,7 +31,11 @@
 <ol>
 	<h2><li>Install dependencies</li></h2>
 
-	
+	<h3>Windows</h3>
+	```bash
+	python -m venv .venv
+	.venv\Scripts\activate
+	```
 
 ```bash
 pip install -r requirements.txt

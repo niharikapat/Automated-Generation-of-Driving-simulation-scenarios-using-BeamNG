@@ -31,7 +31,7 @@
 <h2>Install dependencies</h2>
 
 ```bash
-pip install osmnx networkx shapely pyproj beamngpy
+pip install -r requirements.txt
 ```
 
 <b>Note</b>

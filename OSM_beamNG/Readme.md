@@ -32,7 +32,8 @@
 	<h2><li>Install dependencies</li></h2>
 	
 <h3>Windows</h3> 
-	
+<p>Create and activate a virtual environment first</p>
+
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
@@ -41,6 +42,16 @@ python -m venv .venv
 
 ```bash
 pip install -r requirements.txt
+```
+
+<h2><li>Set Up the Database</li></h2>
+
+<h3>Create the database</h3>
+
+<p>Log into MySQL and run using the command</p>
+
+```bash
+docker exec -it beamng-mysql mysql -u beamng -p beamng_gps
 ```
 </ol>
 <b>Note</b>

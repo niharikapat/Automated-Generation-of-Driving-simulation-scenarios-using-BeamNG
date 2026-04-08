@@ -30,17 +30,19 @@
 
 <ol>
 	<h2><li>Install dependencies</li></h2>
-	<h3>Windows</h3> </ol>
+	
+<h3>Windows</h3> 
 	
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
 ```
+<h3>Install dependencies</h3>
 
 ```bash
 pip install -r requirements.txt
 ```
-
+</ol>
 <b>Note</b>
 
 <p>Update the BeamNG installation path in the script before running it:</p>

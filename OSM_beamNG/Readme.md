@@ -29,7 +29,9 @@
 </ul>
 
 <ol>
-	<li><h2>Install dependencies</h2></li>
+	<h2><li>Install dependencies</li></h2>
+
+	
 
 ```bash
 pip install -r requirements.txt

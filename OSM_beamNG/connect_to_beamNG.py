@@ -1,40 +1,85 @@
+from math import sqrt
 import osmnx as ox
-import networkx as nx
-from shapely.geometry import LineString, Point
 from pyproj import Transformer
-from beamngpy import BeamNGpy, Scenario, Vehicle, Road
-from beamngpy.sensors import AdvancedIMU
+from shapely.geometry import LineString, Point, Polygon
+from beamngpy import BeamNGpy, Scenario, Vehicle, Road, ProceduralCube
+from beamngpy.sensors import AdvancedIMU, GPS
+from db_folder.db import get_conn, create_session, insert_gps_point
+from osm_location_utils import (
+    load_projected_graph,
+    get_wgs84_transformer,
+    get_local_origin,
+    to_local,
+    to_projected,
+)
+
+
+def estimate_road_width(data):
+    highway = data.get("highway")
+
+    if isinstance(highway, list):
+        highway = highway[0]
+
+    if highway in ["motorway", "trunk", "primary"]:
+        return 10
+    elif highway in ["secondary", "tertiary"]:
+        return 8
+    elif highway in ["residential", "unclassified"]:
+        return 6
+    elif highway in ["service", "living_street"]:
+        return 4.5
+    else:
+        return 5
+
+
+def add_gebaeude_a(scenario, G, ox0, oy0):
+    gebaeude_a_latlon = [
+        (48.380369, 10.007933),
+        (48.380143, 10.007984),
+        (48.380393, 10.010166),
+        (48.380619, 10.010105),
+    ]
+
+    # Convert WGS84 lat/lon -> projected CRS of OSM graph
+    to_proj = Transformer.from_crs("EPSG:4326", G.graph["crs"], always_xy=True)
+
+    local_pts = []
+    for lat, lon in gebaeude_a_latlon:
+        x_proj, y_proj = to_proj.transform(lon, lat)
+        x_local, y_local, z_local = to_local(x_proj, y_proj, ox0, oy0, 0.0)
+        local_pts.append((x_local, y_local, z_local))
+
+    # Compute center point of the 4 corners
+    center_x = sum(p[0] for p in local_pts) / 4
+    center_y = sum(p[1] for p in local_pts) / 4
+
+    # Estimate building dimensions from corner distances
+    def dist2d(p1, p2):
+        return sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
+
+    width = dist2d(local_pts[0], local_pts[1])
+    length = dist2d(local_pts[1], local_pts[2])
+
+    height = 12.0 
+
+    scenario.add_procedural_mesh(
+        ProceduralCube(
+            name="gebaeude_a",
+            pos=(center_x, center_y, height / 2.0),
+            size=(width, length, height),
+            rot_quat=(0, 0, 0, 1),
+        )
+    )
 
 
 def main():
-    # ---- OSM download + projection (meters) ----
-    location = "Hochschule Neu-Ulm, Neu-Ulm, Bavaria, Germany"
-    center = ox.geocode(location)  # (lat, lon)
+    G, center = load_projected_graph()
+    ox0, oy0 = get_local_origin(G)
+    to_wgs84 = get_wgs84_transformer(G)
 
-    G = ox.graph_from_point(center, dist=200, network_type="drive", simplify=True)
-    G = ox.project_graph(G)  # x/y now in meters (projected CRS)
-    #ox.plot_graph(G)
-    print(G)
-    
+    # Real lon/lat of your BeamNG map origin
+    ref_lon, ref_lat = to_wgs84.transform(ox0, oy0)
 
-    # ---- Choose a local origin so coordinates are near (0,0) ----
-    xs = [float(G.nodes[n]["x"]) for n in G.nodes]
-    ys = [float(G.nodes[n]["y"]) for n in G.nodes]
-    ox0, oy0 = sum(xs) / len(xs), sum(ys) / len(ys)
-
-    def to_local(x, y, z=0.0):
-        return (float(x - ox0), float(y - oy0), float(z))
-
-    def to_projected(x_local, y_local):
-        """Convert BeamNG local coords back to OSM projected meters."""
-        return float(x_local + ox0), float(y_local + oy0)
-
-    # Transformer: projected CRS -> WGS84 lat/lon
-    # Note: Transformer expects (x, y) and returns (lon, lat) with always_xy=True
-    proj_crs = G.graph.get("crs")
-    to_wgs84 = Transformer.from_crs(proj_crs, "EPSG:4326", always_xy=True)
-
-    # ---- Build BeamNG scenario ----
     scenario = Scenario("tech_ground", "my_scenario_1")
 
     rid = 0
@@ -48,22 +93,22 @@ def main():
                 ]
             )
 
-        pts = [to_local(x, y, 0.0) for x, y in geom.coords]
+        road_width = estimate_road_width(data)
+
+        pts = [(*to_local(x, y, ox0, oy0, 0.0), road_width) for x, y in geom.coords]
         if len(pts) < 2:
             continue
 
-        pts = [(float(x), float(y), float(z)) for (x, y, z) in pts]
-
-        road = Road("road_asphalt_2lane", rid=f"osm_{rid}")
+        road = Road("road_asphalt_2lane", rid=f"osm_{rid}", default_width=road_width)
         road.add_nodes(*pts)
         scenario.add_road(road)
         rid += 1
 
-    # ---- Vehicle ----
+    add_gebaeude_a(scenario, G, ox0, oy0)
+
     vehicle = Vehicle("ego", model="etk800", licence="HNU")
     scenario.add_vehicle(vehicle, pos=(0, 0, 0.2), rot_quat=(0, 0, 0, 1))
 
-    # ---- BeamNG connection ----
     bng = BeamNGpy(
         "localhost",
         25252,
@@ -75,54 +120,91 @@ def main():
     bng.scenario.load(scenario)
     bng.scenario.start()
 
-    imu = AdvancedIMU("accel1", bng, vehicle, gfx_update_time=0.01)
+    # DB setup
+    conn = get_conn()
+    session_id = create_session(conn, scenario.name, vehicle.vid)
+    print("Created DB session:", session_id)
 
-    nodes = list(G.nodes)
-    if len(nodes) >= 2:
-        start, goal = nodes[0], nodes[-1]
-        _path_nodes = nx.shortest_path(G, start, goal, weight="length")
-        vehicle.ai.set_mode("span") 
+    imu = AdvancedIMU("imu1", bng, vehicle, gfx_update_time=0.01)
 
-    print("Scenario running. Close BeamNG or Ctrl+C to stop.")
+    gps = GPS(
+        "gps1",
+        bng,
+        vehicle,
+        gfx_update_time=0.01,
+        physics_update_time=0.01,
+        pos=(0, 0, 1.7),
+        ref_lon=float(ref_lon),
+        ref_lat=float(ref_lat),
+        is_send_immediately=False,
+        is_visualised=False,
+    )
 
-    i = 0
+    print("Scenario running. Press Ctrl+C to stop.")
+
     try:
         while True:
-            bng.step(60)
-            i += 1
+            bng.step(30)
 
-            #Print every 10 steps to avoid flooding
-            if i % 10 != 0:
+            # IMU reading
+            imu_data = imu.poll()
+            if not imu_data or "pos" not in imu_data[0]:
                 continue
 
-            data = imu.poll()
-            if not data or "pos" not in data[0]:
+            x_local, y_local, z_local = imu_data[0]["pos"]
+
+            # Convert IMU world/local meters -> projected meters -> lon/lat
+            x_proj, y_proj = to_projected(x_local, y_local, ox0, oy0)
+            imu_lon, imu_lat = to_wgs84.transform(x_proj, y_proj)
+
+            # GPS reading
+            gps_data = gps.poll()
+            if not gps_data:
                 continue
 
-            # BeamNG world/local position 
-            x_local, y_local, z_local = data[0]["pos"]
+            latest_key = max(gps_data.keys())
+            gps_reading = gps_data[latest_key]
 
-            # Convert back to projected meters in the OSM graph CRS
-            x_proj, y_proj = to_projected(x_local, y_local)
+            gps_lat = gps_reading.get("lat")
+            gps_lon = gps_reading.get("lon")
 
-            # Convert projected -> lon/lat
-            lon, lat = to_wgs84.transform(x_proj, y_proj)
+            if gps_lat is None or gps_lon is None:
+                print(f"Waiting for valid GPS reading... GPS=({gps_lat}, {gps_lon})")
+                continue
 
-            # Find nearest OSM road edge and compute distance to it (meters)
+            # Distance to nearest road
             u, v, key = ox.distance.nearest_edges(G, X=x_proj, Y=y_proj)
             edge_data = G.get_edge_data(u, v, key)
             edge_geom = edge_data.get("geometry")
+
             if edge_geom is None:
                 edge_geom = LineString(
-                    [(G.nodes[u]["x"], G.nodes[u]["y"]), (G.nodes[v]["x"], G.nodes[v]["y"])]
+                    [
+                        (float(G.nodes[u]["x"]), float(G.nodes[u]["y"])),
+                        (float(G.nodes[v]["x"]), float(G.nodes[v]["y"])),
+                    ]
                 )
 
             dist_to_road_m = edge_geom.distance(Point(x_proj, y_proj))
 
+            # Insert into DB
+            insert_gps_point(
+                conn,
+                session_id=session_id,
+                lat=float(imu_lat),
+                lon=float(imu_lon),
+                gps_lat=float(gps_lat),
+                gps_lon=float(gps_lon),
+                x_local=float(x_local),
+                y_local=float(y_local),
+                z_local=float(z_local),
+                dist_to_road_m=float(dist_to_road_m),
+            )
+
             print(
-                f"local(xyz)=({x_local:.2f},{y_local:.2f},{z_local:.2f}) | "
-                f"lat/lon=({lat:.7f},{lon:.7f}) | "
-                #f"nearest-road-node={dist_to_road_m:.2f} m"
+                f"IMU lat/lon=({float(imu_lat):.7f}, {float(imu_lon):.7f}) | "
+                f"GPS lat/lon=({float(gps_lat):.7f}, {float(gps_lon):.7f}) | "
+                f"dist_to_road={float(dist_to_road_m):.2f} m"
             )
 
     except KeyboardInterrupt:
@@ -130,6 +212,16 @@ def main():
     finally:
         try:
             imu.remove()
+        except Exception:
+            pass
+
+        try:
+            gps.remove()
+        except Exception:
+            pass
+
+        try:
+            conn.close()
         except Exception:
             pass
 

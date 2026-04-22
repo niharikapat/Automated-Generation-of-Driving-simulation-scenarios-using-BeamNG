@@ -1,0 +1,9 @@
+beamngpy>=1.31
+osmnx>=1.9
+pyproj>=3.6
+shapely>=2.0
+pandas>=2.0
+folium>=0.16
+gmplot>=1.4.1
+python-dotenv>=1.0
+mysql-connector-python>=8.0

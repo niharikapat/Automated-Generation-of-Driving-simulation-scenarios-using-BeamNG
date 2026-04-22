@@ -1,0 +1,18 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: beamng-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: beamngroot
+      MYSQL_DATABASE: beamng_gps
+      MYSQL_USER: beamng
+      MYSQL_PASSWORD: beamngpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./initdb:/docker-entrypoint-initdb.d
+
+volumes:
+  mysql_data:

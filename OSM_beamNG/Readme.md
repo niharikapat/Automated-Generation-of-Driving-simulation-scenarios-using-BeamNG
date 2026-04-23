@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BeamNG + OSM Project Setup Guide</title>
 </head>
 <body>
 
@@ -10,7 +11,12 @@
 
   <p>
     This project uses <strong>BeamNG.tech</strong>, <strong>Python</strong>, and
-    <strong>MySQL via Docker</strong> to run a driving simulation scenario and store GPS-related data.
+    <strong>MySQL via Docker</strong> to run a driving simulation scenario and store vehicle GPS trajectory data.
+  </p>
+
+  <p>
+    The SQL setup is used to store the vehicle trajectory in the database so that it can later be
+    plotted on a map, compared with other runs, or reused for any further analysis as needed.
   </p>
 
   <hr />
@@ -30,7 +36,9 @@
 
   <hr />
 
-  <h2>1. Install BeamNG.tech</h2>
+  <h2>Section 1: BeamNG and Project Setup</h2>
+
+  <h3>1. Install BeamNG.tech</h3>
 
   <ol>
     <li>Download the <strong>BeamNG.tech</strong> package.</li>
@@ -38,18 +46,14 @@
     <li>Install and activate the <strong>license</strong> by following the instructions provided with BeamNG.tech.</li>
   </ol>
 
-  <hr />
-
-  <h2>2. Download the Project Code</h2>
+  <h3>2. Download the Project Code</h3>
 
   <ol>
     <li>Download the ZIP package from GitHub.</li>
     <li>Extract the project contents into your desired folder.</li>
   </ol>
 
-  <hr />
-
-  <h2>3. Update the BeamNG Path</h2>
+  <h3>3. Update the BeamNG Path</h3>
 
   <p>
     Open the file <code>connect_to_beamng.py</code> and change the BeamNG path based on where
@@ -62,9 +66,7 @@
 
   <p>Make sure this path points to your local BeamNG.tech installation folder.</p>
 
-  <hr />
-
-  <h2>4. Install Python</h2>
+  <h3>4. Install Python</h3>
 
   <ol>
     <li>Download and install <strong>Python</strong> on your system.</li>
@@ -79,9 +81,7 @@ pip --version</code></pre>
 
   <p>If both commands return version numbers, Python and pip are installed correctly.</p>
 
-  <hr />
-
-  <h2>5. Install Project Requirements</h2>
+  <h3>5. Install Project Requirements</h3>
 
   <ol>
     <li>Open Command Prompt or PowerShell.</li>
@@ -100,9 +100,36 @@ pip --version</code></pre>
 
   <p>This command installs all dependencies required to run the project.</p>
 
+  <h3>6. Launch the Scenario in BeamNG</h3>
+
+  <p>
+    Once the setup is complete, you can launch the driving scenario in BeamNG by running the following command
+    from the project folder:
+  </p>
+
+  <pre><code>python connect_to_beamng.py</code></pre>
+
+  <p>
+    This will start the scenario and begin a driving session.
+  </p>
+
+  <p>
+    After completing a session run, you can plot the recorded vehicle trajectory on the OpenStreetMap map using:
+  </p>
+
+  <pre><code>python osm_map_plot.py</code></pre>
+
   <hr />
 
-  <h2>6. Set Up SQL Using Docker</h2>
+  <h2>Section 2: SQL Database Setup</h2>
+
+  <p>
+    The SQL database is used to store the vehicle trajectory generated during the BeamNG session.
+    This stored data can later be used to plot the vehicle path on a map, compare multiple runs,
+    or process the trajectory data further depending on your use case.
+  </p>
+
+  <h3>7. Set Up SQL Using Docker</h3>
 
   <ol>
     <li>Make sure Docker Desktop is installed and running.</li>
@@ -114,9 +141,7 @@ pip --version</code></pre>
 
   <p>This will start the SQL database container in detached mode.</p>
 
-  <hr />
-
-  <h2>7. Log In to the SQL Database</h2>
+  <h3>8. Log In to the SQL Database</h3>
 
   <p>
     After the container is running, use the following command to log in to the MySQL database inside Docker:
@@ -126,9 +151,7 @@ pip --version</code></pre>
 
   <p>This connects you to the <code>beamng_gps</code> database.</p>
 
-  <hr />
-
-  <h2>8. Check the Tables</h2>
+  <h3>9. Check the Tables</h3>
 
   <p>
     Once you are inside the MySQL shell, run the following command to check the available tables:
@@ -138,9 +161,7 @@ pip --version</code></pre>
 
   <p>This helps verify that the database has been created correctly.</p>
 
-  <hr />
-
-  <h2>9. Exit MySQL</h2>
+  <h3>10. Exit MySQL</h3>
 
   <p>When you are done checking the database, exit the MySQL shell using:</p>
 
@@ -150,18 +171,20 @@ pip --version</code></pre>
 
   <h2>Summary of Commands</h2>
 
-  <p>Use the following commands during setup:</p>
+  <h3>BeamNG and Project Setup</h3>
 
   <pre><code>python --version
 pip --version
 cd path\to\your\project\folder
 pip install -r requirements.txt
-docker compose up -d
-docker exec -it beamng-mysql mysql -ubeamng -pbeamngpass beamng_gps</code></pre>
+python connect_to_beamng.py
+python osm_map_plot.py</code></pre>
 
-  <p>Inside MySQL:</p>
+  <h3>SQL Database Setup</h3>
 
-  <pre><code>SHOW TABLES;
+  <pre><code>docker compose up -d
+docker exec -it beamng-mysql mysql -ubeamng -pbeamngpass beamng_gps
+SHOW TABLES;
 exit</code></pre>
 
   <hr />
@@ -173,6 +196,8 @@ exit</code></pre>
     <li>The BeamNG path in <code>connect_to_beamng.py</code> must be updated correctly.</li>
     <li>Python and pip must be accessible from the command line.</li>
     <li>Docker Desktop must be running before starting the SQL container.</li>
+    <li>Run all commands from the project folder unless stated otherwise.</li>
+    <li>The SQL setup is required if you want to store trajectory data for plotting, comparison, or later analysis.</li>
   </ul>
 
 </body>

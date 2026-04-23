@@ -1,62 +1,180 @@
-<h1>Automatic Scenario creation in BeamNG.Tech using OSM data</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BeamNG + OSM Project Setup Guide</title>
+</head>
+<body>
 
-<h2>What it does</h2>
+  <h1>BeamNG + OSM Project Setup Guide</h1>
 
-<p>This script downloads a drivable road network from <b>OpenStreetMap</b> around <b>Hochschule Neu-Ulm</b>, converts the road geometry into local coordinates, and creates a <b>BeamNG.tech</b> scenario from it. It also spawns a vehicle, reads its position using an IMU sensor, and converts the simulated position back into geographic coordinates. </p>
+  <p>
+    This project uses <strong>BeamNG.tech</strong>, <strong>Python</strong>, and
+    <strong>MySQL via Docker</strong> to run a driving simulation scenario and store GPS-related data.
+  </p>
 
-<h2>What it helps for</h2>
-<ul>
-	<li>Testing OSM-based road import into BeamNG.tech</li>
-	<li>Map-based driving simulation</li>
-	<li>Localization and GPS position checks</li>
-	<li>Prototyping route planning and road-network experiments</li>
-</ul>
+  <hr />
 
+  <h2>Prerequisites</h2>
 
-<h2>Requirements</h2>
-<ul>
-	
-</ul>
-<li>Python 3.9+</li>
-<li>BeamNG.tech installed locally</li>
-<li>Python packages:</li>
-<ul>
-	<li>osmnx</li>
-	<li>networkx</li>
-	<li>shapely</li>
-	<li>pyproj</li>
-	<li>beamngpy</li>
-</ul>
+  <p>Make sure the following are available before starting:</p>
 
-<ol>
-	<h2><li>Install dependencies</li></h2>
-	
-<h3>Windows</h3> 
-<p>Create and activate a virtual environment first</p>
+  <ul>
+    <li>BeamNG.tech package</li>
+    <li>Valid BeamNG.tech license</li>
+    <li>Python</li>
+    <li>pip</li>
+    <li>Docker Desktop</li>
+    <li>GitHub project ZIP</li>
+  </ul>
 
-```bash
-python -m venv .venv
-.venv\Scripts\activate
-```
-<h3>Install dependencies</h3>
+  <hr />
 
-```bash
+  <h2>1. Install BeamNG.tech</h2>
+
+  <ol>
+    <li>Download the <strong>BeamNG.tech</strong> package.</li>
+    <li>Extract it to your preferred location.</li>
+    <li>Install and activate the <strong>license</strong> by following the instructions provided with BeamNG.tech.</li>
+  </ol>
+
+  <hr />
+
+  <h2>2. Download the Project Code</h2>
+
+  <ol>
+    <li>Download the ZIP package from GitHub.</li>
+    <li>Extract the project contents into your desired folder.</li>
+  </ol>
+
+  <hr />
+
+  <h2>3. Update the BeamNG Path</h2>
+
+  <p>
+    Open the file <code>connect_to_beamng.py</code> and change the BeamNG path based on where
+    <code>BeamNG.tech</code> is installed on your system.
+  </p>
+
+  <p>Example:</p>
+
+  <pre><code>BNG_HOME = "C:/Path/To/BeamNG.tech"</code></pre>
+
+  <p>Make sure this path points to your local BeamNG.tech installation folder.</p>
+
+  <hr />
+
+  <h2>4. Install Python</h2>
+
+  <ol>
+    <li>Download and install <strong>Python</strong> on your system.</li>
+    <li>During installation, make sure to enable the option to add Python to the system PATH.</li>
+    <li>After installation, open Command Prompt or PowerShell and verify that Python is accessible.</li>
+  </ol>
+
+  <p>Run:</p>
+
+  <pre><code>python --version
+pip --version</code></pre>
+
+  <p>If both commands return version numbers, Python and pip are installed correctly.</p>
+
+  <hr />
+
+  <h2>5. Install Project Requirements</h2>
+
+  <ol>
+    <li>Open Command Prompt or PowerShell.</li>
+    <li>Navigate to the extracted project folder.</li>
+  </ol>
+
+  <p>Example:</p>
+
+  <pre><code>cd path\to\your\project\folder</code></pre>
+
+  <ol start="3">
+    <li>Install all required Python packages using:</li>
+  </ol>
+
+  <pre><code>pip install -r requirements.txt</code></pre>
+
+  <p>This command installs all dependencies required to run the project.</p>
+
+  <hr />
+
+  <h2>6. Set Up SQL Using Docker</h2>
+
+  <ol>
+    <li>Make sure Docker Desktop is installed and running.</li>
+    <li>Open Command Prompt or PowerShell in the project folder.</li>
+    <li>Start the MySQL container using:</li>
+  </ol>
+
+  <pre><code>docker compose up -d</code></pre>
+
+  <p>This will start the SQL database container in detached mode.</p>
+
+  <hr />
+
+  <h2>7. Log In to the SQL Database</h2>
+
+  <p>
+    After the container is running, use the following command to log in to the MySQL database inside Docker:
+  </p>
+
+  <pre><code>docker exec -it beamng-mysql mysql -ubeamng -pbeamngpass beamng_gps</code></pre>
+
+  <p>This connects you to the <code>beamng_gps</code> database.</p>
+
+  <hr />
+
+  <h2>8. Check the Tables</h2>
+
+  <p>
+    Once you are inside the MySQL shell, run the following command to check the available tables:
+  </p>
+
+  <pre><code>SHOW TABLES;</code></pre>
+
+  <p>This helps verify that the database has been created correctly.</p>
+
+  <hr />
+
+  <h2>9. Exit MySQL</h2>
+
+  <p>When you are done checking the database, exit the MySQL shell using:</p>
+
+  <pre><code>exit</code></pre>
+
+  <hr />
+
+  <h2>Summary of Commands</h2>
+
+  <p>Use the following commands during setup:</p>
+
+  <pre><code>python --version
+pip --version
+cd path\to\your\project\folder
 pip install -r requirements.txt
-```
+docker compose up -d
+docker exec -it beamng-mysql mysql -ubeamng -pbeamngpass beamng_gps</code></pre>
 
-<h2><li>Set Up the Database</li></h2>
+  <p>Inside MySQL:</p>
 
-<h3>Create the database</h3>
+  <pre><code>SHOW TABLES;
+exit</code></pre>
 
-<p>Log into MySQL and run using the command</p>
+  <hr />
 
-```bash
-docker exec -it beamng-mysql mysql -u beamng -p beamng_gps
-```
-</ol>
-<b>Note</b>
+  <h2>Notes</h2>
 
-<p>Update the BeamNG installation path in the script before running it:</p>
+  <ul>
+    <li>BeamNG.tech must be installed and licensed before running the simulation.</li>
+    <li>The BeamNG path in <code>connect_to_beamng.py</code> must be updated correctly.</li>
+    <li>Python and pip must be accessible from the command line.</li>
+    <li>Docker Desktop must be running before starting the SQL container.</li>
+  </ul>
 
-`home=r"C:\\BeamNG.tech.v0.37.6.0\\BeamNG.tech.v0.37.6.0"`
-
+</body>
+</html>

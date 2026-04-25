@@ -107,7 +107,7 @@ def main():
     add_gebaeude_a(scenario, G, ox0, oy0)
 
     vehicle = Vehicle("ego", model="etk800", licence="HNU")
-    scenario.add_vehicle(vehicle, pos=(0, 0, 0.2), rot_quat=(0, 0, 0, 1))
+    scenario.add_vehicle(vehicle, pos=(-22.94, -62.41, 0.2), rot_quat=(0, 0, 0, 1))
 
     bng = BeamNGpy(
         "localhost",
@@ -204,6 +204,7 @@ def main():
             print(
                 f"IMU lat/lon=({float(imu_lat):.7f}, {float(imu_lon):.7f}) | "
                 f"GPS lat/lon=({float(gps_lat):.7f}, {float(gps_lon):.7f}) | "
+                f"X/Y=({float(x_local):.2f},{float(y_local):.2f}) | "
                 f"dist_to_road={float(dist_to_road_m):.2f} m"
             )
 

@@ -50,7 +50,7 @@ def load_all_sessions():
             vehicle_id,
             started_at
         FROM sessions
-        ORDER BY started_at;
+        ORDER BY started_at DESC LIMIT 5;
         """
     )
 

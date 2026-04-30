@@ -3,13 +3,13 @@ from pyproj import Transformer
 from shapely.geometry import LineString
 
 LOCATION = "Hochschule Neu-Ulm, Neu-Ulm, Bavaria, Germany"
-DIST_METERS = 400
+DIST_METERS = 5000
 NETWORK_TYPE = "drive"
 
 #Download OSM graph around the configured location and project it to a metric CRS
 def load_projected_graph(location=LOCATION, dist=DIST_METERS, network_type=NETWORK_TYPE):
     center = ox.geocode(location)
-    G = ox.graph_from_point(center, dist=dist, network_type=network_type, simplify=False)
+    G = ox.graph_from_point(center, dist=dist, network_type=network_type, simplify=True)
     G = ox.project_graph(G)
     return G, center
 
@@ -19,12 +19,21 @@ def get_wgs84_transformer(G):
     return Transformer.from_crs(proj_crs, "EPSG:4326", always_xy=True)
 
 #Compute average graph node position to use as BeamNG local origin
-def get_local_origin(G):
+def get_local_origin(G, center=None):
+    # If center is provided, use real OSM center as BeamNG (0,0)
+    if center is not None:
+        to_proj = Transformer.from_crs("EPSG:4326", G.graph["crs"], always_xy=True)
+
+        center_lat, center_lon = center
+        ox0, oy0 = to_proj.transform(center_lon, center_lat)
+
+        return float(ox0), float(oy0)
+
+    # fallback: graph average center
     xs = [float(G.nodes[n]["x"]) for n in G.nodes]
     ys = [float(G.nodes[n]["y"]) for n in G.nodes]
-    ox0 = sum(xs) / len(xs)
-    oy0 = sum(ys) / len(ys)
-    return ox0, oy0
+
+    return sum(xs) / len(xs), sum(ys) / len(ys)
 
 #Convert projected OSM coordinates to BeamNG local coordinates.
 def to_local(x, y, ox0, oy0, z=0.0): 

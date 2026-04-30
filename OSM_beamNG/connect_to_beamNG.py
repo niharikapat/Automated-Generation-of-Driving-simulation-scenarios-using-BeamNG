@@ -1,5 +1,6 @@
 from math import sqrt
 import osmnx as ox
+import networkx as nx
 from pyproj import Transformer
 from shapely.geometry import LineString, Point, Polygon
 from beamngpy import BeamNGpy, Scenario, Vehicle, Road, ProceduralCube
@@ -31,6 +32,20 @@ def estimate_road_width(data):
     else:
         return 5
 
+def get_spawn_point_from_osm(G, center, ox0, oy0):
+    to_proj = Transformer.from_crs("EPSG:4326", G.graph["crs"], always_xy=True)
+
+    center_lat, center_lon = center
+    center_x, center_y = to_proj.transform(center_lon, center_lat)
+
+    node_id = ox.distance.nearest_nodes(G, X=center_x, Y=center_y)
+
+    x_proj = float(G.nodes[node_id]["x"])
+    y_proj = float(G.nodes[node_id]["y"])
+
+    x_local, y_local, z_local = to_local(x_proj, y_proj, ox0, oy0, 0.5)
+
+    return x_local, y_local, z_local
 
 def add_gebaeude_a(scenario, G, ox0, oy0):
     gebaeude_a_latlon = [
@@ -74,7 +89,7 @@ def add_gebaeude_a(scenario, G, ox0, oy0):
 
 def main():
     G, center = load_projected_graph()
-    ox0, oy0 = get_local_origin(G)
+    ox0, oy0 = get_local_origin(G, center)    
     to_wgs84 = get_wgs84_transformer(G)
 
     # Real lon/lat of your BeamNG map origin
@@ -107,7 +122,14 @@ def main():
     add_gebaeude_a(scenario, G, ox0, oy0)
 
     vehicle = Vehicle("ego", model="etk800", licence="HNU")
-    scenario.add_vehicle(vehicle, pos=(-22.94, -62.41, 0.2), rot_quat=(0, 0, 0, 1))
+    spawn_pos = get_spawn_point_from_osm(G, center, ox0, oy0)
+
+
+    scenario.add_vehicle(
+    vehicle,
+    pos=spawn_pos,
+    rot_quat=(0, 0, 0, 1)
+    )
 
     bng = BeamNGpy(
         "localhost",
@@ -119,6 +141,9 @@ def main():
     scenario.make(bng)
     bng.scenario.load(scenario)
     bng.scenario.start()
+
+    vehicle.ai.set_mode("random")
+    vehicle.ai.set_speed(8.33)
 
     # DB setup
     conn = get_conn()

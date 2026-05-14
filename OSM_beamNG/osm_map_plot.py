@@ -62,7 +62,7 @@ def main():
         tiles="OpenStreetMap",
     )
 
-    # --- Gray road edges ---
+    #Gray coloring for road edges
     for road_lats, road_lons in road_lines:
         coords = list(zip(road_lats, road_lons))
         folium.PolyLine(
@@ -72,7 +72,7 @@ def main():
             opacity=0.8,
         ).add_to(m)
 
-    # --- Dark blue graph nodes ---
+    #Graph nodes marked in dark blue coloring
     for lat, lon in zip(graph_node_lats, graph_node_lons):
         folium.CircleMarker(
             location=[lat, lon],
@@ -83,7 +83,7 @@ def main():
             fill_opacity=1.0,
         ).add_to(m)
 
-    # --- IMU trace in black ---
+    #Vehicle trace for IMU added in black
     imu_df = df_points.dropna(subset=["lat", "lon"])
     imu_lats = imu_df["lat"].astype(float).tolist()
     imu_lons = imu_df["lon"].astype(float).tolist()
@@ -97,7 +97,7 @@ def main():
             opacity=1.0,
         ).add_to(m)
 
-    # --- GPS trace in red ---
+    #Vehcile trace for GPS added in red
     gps_df = df_points.dropna(subset=["gps_lat", "gps_lon"])
     gps_lats = gps_df["gps_lat"].astype(float).tolist()
     gps_lons = gps_df["gps_lon"].astype(float).tolist()
@@ -111,7 +111,7 @@ def main():
             opacity=1.0,
         ).add_to(m)
 
-    # --- Markers every 3 points ---
+    #Markers for every 3 points
     MARK_EVERY_N = 3
 
     for i in range(0, len(gps_lats), MARK_EVERY_N):
@@ -128,7 +128,7 @@ def main():
             icon=folium.Icon(color="black"),
         ).add_to(m)
 
-    # --- Start / End markers ---
+    #Start and end markers for the session trace
     if gps_lats and gps_lons:
         folium.Marker(
             location=[gps_lats[0], gps_lons[0]],

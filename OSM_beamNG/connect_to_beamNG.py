@@ -55,7 +55,7 @@ def add_gebaeude_a(scenario, G, ox0, oy0):
         (48.380619, 10.010105),
     ]
 
-    # Convert WGS84 lat/lon -> projected CRS of OSM graph
+    #Convert WGS84 lat/lon into projected CRS of OSM graph
     to_proj = Transformer.from_crs("EPSG:4326", G.graph["crs"], always_xy=True)
 
     local_pts = []
@@ -64,11 +64,11 @@ def add_gebaeude_a(scenario, G, ox0, oy0):
         x_local, y_local, z_local = to_local(x_proj, y_proj, ox0, oy0, 0.0)
         local_pts.append((x_local, y_local, z_local))
 
-    # Compute center point of the 4 corners
+    #Compute center point of the 4 corners
     center_x = sum(p[0] for p in local_pts) / 4
     center_y = sum(p[1] for p in local_pts) / 4
 
-    # Estimate building dimensions from corner distances
+    #Estimate building dimensions from corner distances
     def dist2d(p1, p2):
         return sqrt((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)
 
@@ -92,7 +92,7 @@ def main():
     ox0, oy0 = get_local_origin(G, center)    
     to_wgs84 = get_wgs84_transformer(G)
 
-    # Real lon/lat of your BeamNG map origin
+    #Real lon/lat of your BeamNG map origin
     ref_lon, ref_lat = to_wgs84.transform(ox0, oy0)
 
     scenario = Scenario("tech_ground", "my_scenario_1")
@@ -145,7 +145,7 @@ def main():
     vehicle.ai.set_mode("random")
     vehicle.ai.set_speed(8.33)
 
-    # DB setup
+    #Database setup
     conn = get_conn()
     session_id = create_session(conn, scenario.name, vehicle.vid)
     print("Created DB session:", session_id)
@@ -178,11 +178,11 @@ def main():
 
             x_local, y_local, z_local = imu_data[0]["pos"]
 
-            # Convert IMU world/local meters -> projected meters -> lon/lat
+            #Convert IMU world/local meters to the projected meters into the original lon/lat
             x_proj, y_proj = to_projected(x_local, y_local, ox0, oy0)
             imu_lon, imu_lat = to_wgs84.transform(x_proj, y_proj)
 
-            # GPS reading
+            #GPS reading from vehicle trace
             gps_data = gps.poll()
             if not gps_data:
                 continue
@@ -197,7 +197,7 @@ def main():
                 print(f"Waiting for valid GPS reading... GPS=({gps_lat}, {gps_lon})")
                 continue
 
-            # Distance to nearest road
+            #Distance to nearest road segment
             u, v, key = ox.distance.nearest_edges(G, X=x_proj, Y=y_proj)
             edge_data = G.get_edge_data(u, v, key)
             edge_geom = edge_data.get("geometry")
@@ -212,7 +212,7 @@ def main():
 
             dist_to_road_m = edge_geom.distance(Point(x_proj, y_proj))
 
-            # Insert into DB
+            #Insert current session details into DB
             insert_gps_point(
                 conn,
                 session_id=session_id,

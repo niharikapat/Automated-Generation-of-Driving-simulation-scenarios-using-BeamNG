@@ -9,6 +9,7 @@ from osm_location_utils import (
     get_osm_nodes_latlon,
 )
 
+#Function to load latest session from database for plotting
 def load_latest_session_points():
     conn = get_conn()
 

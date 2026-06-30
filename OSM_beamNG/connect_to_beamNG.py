@@ -1,10 +1,9 @@
 from math import sqrt
 import osmnx as ox
-import networkx as nx
 from pyproj import Transformer
 from shapely.geometry import LineString, Point, Polygon
 from beamngpy import BeamNGpy, Scenario, Vehicle, Road, ProceduralCube
-from beamngpy.sensors import AdvancedIMU, GPS
+from beamngpy.sensors import AdvancedIMU, GPS, Electrics
 from db_folder.db import get_conn, create_session, insert_gps_point
 from osm_location_utils import (
     load_projected_graph,
@@ -170,6 +169,11 @@ def main():
     try:
         while True:
             bng.step(30)
+            vehicle.sensors.poll("electrics")
+            electrics_data = vehicle.sensors["electrics"]
+
+            speed_mps = abs(float(electrics_data["wheelspeed"]))
+            speed_kmh = speed_mps * 3.6
 
             # IMU reading
             imu_data = imu.poll()
@@ -230,6 +234,7 @@ def main():
                 f"IMU lat/lon=({float(imu_lat):.7f}, {float(imu_lon):.7f}) | "
                 f"GPS lat/lon=({float(gps_lat):.7f}, {float(gps_lon):.7f}) | "
                 f"X/Y=({float(x_local):.2f},{float(y_local):.2f}) | "
+                f"speed={float(speed_kmh):.2f} km/h | "
                 f"dist_to_road={float(dist_to_road_m):.2f} m"
             )
 
